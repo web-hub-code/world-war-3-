@@ -2,245 +2,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GBTS Pro Academy | Elite Portal</title>
+    <title>GBTS Global Academy | Discussion Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap');
-        body { font-family: 'Outfit', sans-serif; background: #f4f7fc; }
-        .glass-nav { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(15px); }
-        .level-card { transition: 0.4s; border-radius: 35px; background: white; position: relative; }
-        .locked { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; }
-        .pending { border: 2px solid #f59e0b; background: #fffbeb; }
-        .q-card { background: #fff; padding: 25px; border-radius: 20px; border: 1px solid #e5e7eb; margin-bottom: 15px; }
-        .option-label { display: block; padding: 15px; border: 2px solid #f3f4f6; border-radius: 15px; cursor: pointer; margin-top: 8px; transition: 0.2s; }
-        .option-label:hover { background: #eff6ff; border-color: #1e3a8a; }
+        body { font-family: 'Outfit', sans-serif; background: #f1f5f9; }
         .tab-content { display: none; }
-        .active-tab { display: block; }
+        .active-tab { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Chat Styling */
+        #chatBox { height: 400px; overflow-y: auto; scroll-behavior: smooth; }
+        .msg-card { background: white; border-radius: 15px 15px 15px 0; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); max-width: 85%; }
+        .msg-name { font-size: 10px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .msg-text { font-size: 14px; color: #334155; }
+        
+        .level-card { border-radius: 30px; transition: 0.3s; background: white; cursor: pointer; }
+        .locked { filter: grayscale(1); opacity: 0.4; pointer-events: none; }
     </style>
 </head>
-<body class="pb-24">
+<body class="pb-20">
 
-    <div id="loginScreen" class="fixed inset-0 bg-[#0f172a] z-[500] flex items-center justify-center p-6 hidden">
-        <div class="bg-white p-10 rounded-[45px] max-w-md w-full shadow-2xl text-center">
-            <h2 class="text-4xl font-black text-blue-900 mb-2 italic tracking-tighter">PRIME ACADEMY</h2>
-            <p class="text-xs font-bold text-gray-400 mb-8 uppercase tracking-widest">Candidate Login Portal</p>
-            <input id="candidateName" type="text" placeholder="Enter Full Name" class="w-full p-5 bg-gray-100 rounded-2xl mb-4 border-2 border-transparent focus:border-blue-600 outline-none">
-            <button onclick="loginUser()" class="w-full bg-blue-900 text-white py-5 rounded-2xl font-black text-lg shadow-xl hover:scale-95 transition">LOGIN TO PORTAL</button>
+    <div id="loginScreen" class="fixed inset-0 bg-slate-900 z-[1000] flex items-center justify-center p-6 hidden">
+        <div class="bg-white p-10 rounded-[50px] max-w-md w-full text-center shadow-2xl">
+            <h2 class="text-4xl font-black text-blue-900 mb-6 italic">PRIME HUB</h2>
+            <input id="candidateName" type="text" placeholder="Enter Your Name" class="w-full p-5 bg-gray-100 rounded-2xl mb-4 border-2 border-transparent focus:border-blue-600 outline-none text-center font-bold">
+            <button onclick="loginUser()" class="w-full bg-blue-900 text-white py-4 rounded-2xl font-black shadow-lg">JOIN ACADEMY</button>
         </div>
     </div>
 
-    <nav class="glass-nav sticky top-0 z-50 p-4 border-b">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 class="font-black text-blue-900 text-2xl italic tracking-tighter">PRIME PORTAL</h1>
-            <div class="flex gap-4">
-                <button onclick="showTab('levelsTab')" class="text-xs font-black uppercase text-blue-900">Exams</button>
-                <button onclick="showTab('bookTab')" class="text-xs font-black uppercase text-gray-500">Syllabus Book</button>
-                <button onclick="logout()" class="text-xs font-black uppercase text-red-500 underline">Logout</button>
-            </div>
+    <nav class="bg-white sticky top-0 z-50 p-4 border-b flex justify-between items-center px-6">
+        <h1 class="font-black text-xl text-blue-900 italic">GBTS PRO</h1>
+        <div class="flex gap-4">
+            <button onclick="showTab('levelsTab')" class="text-[10px] font-black uppercase text-blue-900">Training</button>
+            <button onclick="showTab('chatTab')" class="text-[10px] font-black uppercase text-gray-500">Discussion</button>
+            <button onclick="showTab('bookTab')" class="text-[10px] font-black uppercase text-gray-500">Syllabus</button>
+            <button onclick="logout()" class="text-[10px] font-black uppercase text-red-500">Logout</button>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto p-4 mt-8">
+    <main class="max-w-6xl mx-auto p-4 mt-6">
         
         <div id="levelsTab" class="tab-content active-tab">
-            <div class="mb-10">
-                <h2 class="text-4xl font-black italic uppercase text-slate-800 tracking-tighter">Exam Progression</h2>
-                <p class="text-blue-600 font-bold">Scoring 50% or above requires Admin Approval to move forward.</p>
+            <h2 class="text-3xl font-black mb-8 italic uppercase">Mission Levels</h2>
+            <div id="levelGrid" class="grid grid-cols-2 md:grid-cols-5 gap-4"></div>
+        </div>
+
+        <div id="chatTab" class="tab-content">
+            <div class="max-w-3xl mx-auto bg-slate-200 rounded-[40px] p-6 shadow-inner">
+                <div class="mb-4 text-center">
+                    <h2 class="font-black text-2xl text-slate-800 uppercase">Global Discussion</h2>
+                    <p class="text-[10px] font-bold text-slate-500 italic">Live Chat with all Candidates</p>
+                </div>
+                
+                <div id="chatBox" class="p-4 bg-slate-50 rounded-3xl mb-4 border-2 border-white shadow-sm">
+                    </div>
+                
+                <div class="flex gap-2">
+                    <input id="chatInput" type="text" placeholder="Apna sawal yahan likhein..." class="flex-1 p-4 rounded-2xl outline-none border-2 border-transparent focus:border-blue-600 font-medium">
+                    <button onclick="sendMessage()" class="bg-blue-900 text-white px-8 rounded-2xl font-black shadow-lg hover:scale-95 transition">SEND</button>
+                </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6" id="levelContainer"></div>
         </div>
 
         <div id="bookTab" class="tab-content">
-            <h2 class="text-4xl font-black mb-10 italic uppercase text-slate-800 tracking-tighter">Official Study Guide</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-white p-8 rounded-[40px] border-t-8 border-blue-900 shadow-sm">
-                    <h3 class="font-black text-2xl mb-4 text-blue-900 underline">Exam Pattern & Marks</h3>
-                    <ul class="text-sm space-y-3 text-gray-600">
-                        <li><b>Total Marks:</b> 100 Marks per level.</li>
-                        <li><b>Passing Criteria:</b> Minimum 50% Marks required.</li>
-                        <li><b>Subjects:</b> English (20), Urdu (20), Islamiyat (20), GK (20), Math (20).</li>
-                        <li><b>Note:</b> After passing, wait for Admin to verify your attempt.</li>
-                    </ul>
+            <h2 class="text-3xl font-black mb-8 italic uppercase">Full Syllabus Book</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-8 rounded-[40px] border-l-8 border-blue-900 shadow-sm">
+                    <h4 class="font-black text-xl mb-4 text-blue-900">English & Grammar</h4>
+                    <p class="text-sm text-gray-600 leading-relaxed">Pora paper Prepositions, Antonyms, aur Active/Passive voice par mushtamil hota hai. "Die of a disease" aur "Junior to me" jaise rules ko ghol kar pi jayein.</p>
                 </div>
-                <div class="bg-white p-8 rounded-[40px] border-t-8 border-green-700 shadow-sm">
-                    <h3 class="font-black text-2xl mb-4 text-green-700 underline">Subject Wise Details</h3>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        <b>English:</b> Focused on Synonyms, Tenses, and Prepositions.<br>
-                        <b>GB GK:</b> Must know 14 districts, mountains, and rivers names.<br>
-                        <b>Islamiyat:</b> Basic knowledge of Quranic Surahs and Battles of Islam.
-                    </p>
+                <div class="bg-white p-8 rounded-[40px] border-l-8 border-green-600 shadow-sm">
+                    <h4 class="font-black text-xl mb-4 text-green-700">General Knowledge</h4>
+                    <p class="text-sm text-gray-600 leading-relaxed">GB ke 14 districts ke naam, Nanga Parbat ki unchai (8126m), aur Karakoram Highway ki details tayar karein.</p>
                 </div>
             </div>
         </div>
 
-        <div id="adminPanel" class="tab-content mt-20 p-10 bg-slate-900 text-white rounded-[40px]">
-            <h2 class="text-3xl font-black mb-6 text-yellow-400">ADMIN CONTROL CENTER</h2>
-            <div id="approvalRequests" class="space-y-4 text-slate-900">
-                <p class="text-white opacity-50 italic">No pending requests...</p>
+        <div id="godPanel" class="tab-content mt-10 p-10 bg-black text-white rounded-[50px] border-4 border-blue-600">
+            <h2 class="text-3xl font-black text-blue-400 mb-6">GOD MODE CONTROLS</h2>
+            <div id="adminArea" class="space-y-4">
+                <p class="text-slate-500 italic">Checking for student requests...</p>
             </div>
+            <button onclick="localStorage.clear(); location.reload();" class="mt-10 text-red-500 font-bold text-xs underline">WIPE SYSTEM DATA</button>
         </div>
+
     </main>
 
-    <div id="testBox" class="hidden fixed inset-0 bg-white z-[400] p-6 overflow-y-auto">
-        <div class="max-w-3xl mx-auto">
-            <div class="flex justify-between items-center mb-10">
-                <h2 id="currentLevelTitle" class="text-4xl font-black text-blue-900 italic">LEVEL 01</h2>
-                <span class="font-black text-gray-400">Total: 100 Marks</span>
-            </div>
-            <div id="quizContent" class="space-y-6"></div>
-            <button onclick="submitExam()" class="w-full bg-blue-900 text-white py-6 rounded-[30px] mt-10 font-black text-xl shadow-2xl">SUBMIT FOR REVIEW</button>
-        </div>
-    </div>
-
-    <footer class="fixed bottom-4 left-0 right-0 text-center">
-        <span onclick="triggerAdmin()" class="text-[10px] text-gray-400 cursor-default opacity-20">Prime Solutions Admin Gateway</span>
+    <footer class="fixed bottom-0 left-0 right-0 p-4 text-center opacity-10">
+        <span onclick="triggerGod()" class="text-[8px] cursor-default">GOD_MODE_PRIME_2026</span>
     </footer>
 
     <script>
-        let user = { name: "", level: 1, status: "ready" };
-        let tapCount = 0;
+        // CONFIG
+        const firebaseConfig = {
+          apiKey: "AIzaSyCMG6KG_oD8cjEk4YpbxXik-C5q8K5MDHk",
+          authDomain: "dark-web-9.firebaseapp.com",
+          projectId: "dark-web-9",
+          storageBucket: "dark-web-9.firebasestorage.app",
+          databaseURL: "https://dark-web-9-default-rtdb.firebaseio.com/", // MAKE SURE THIS IS CORRECT
+          messagingSenderId: "564328425161",
+          appId: "1:564328425161:web:eb109ab77356dafe7f4f18"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        const questionsData = [
-            { q: "What is the capital of Gilgit-Baltistan?", a: "Skardu", b: "Gilgit", c: "Hunza", d: "Astore", ans: "b" },
-            { q: "Which is the highest peak in GB?", a: "Nanga Parbat", b: "K2", c: "Rakaposhi", d: "Broad Peak", ans: "b" },
-            { q: "Total districts in GB?", a: "10", b: "12", c: "14", d: "16", ans: "c" },
-            { q: "Battle of Badr was fought in?", a: "1 AH", b: "2 AH", c: "3 AH", d: "5 AH", ans: "b" },
-            { q: "Senior is always followed by preposition?", a: "Than", b: "To", c: "By", d: "Of", ans: "b" }
-        ];
+        let user = { name: "", level: 1, status: "ready" };
+        let godTaps = 0;
 
         window.onload = () => {
-            const savedName = localStorage.getItem('gb_user_v3');
-            if (savedName) {
-                user.name = savedName;
-                user.level = parseInt(localStorage.getItem('gb_level_v3_' + savedName)) || 1;
-                user.status = localStorage.getItem('gb_status_v3_' + savedName) || "ready";
+            const saved = localStorage.getItem('elite_user');
+            if(saved) {
+                user.name = saved;
+                user.level = parseInt(localStorage.getItem('elite_lvl_' + saved)) || 1;
+                user.status = localStorage.getItem('elite_status_' + saved) || "ready";
                 renderLevels();
+                listenToChat();
             } else {
                 document.getElementById('loginScreen').classList.remove('hidden');
             }
         };
 
         function loginUser() {
-            const name = document.getElementById('candidateName').value.trim();
-            if(!name) return alert("Please enter your name!");
-            user.name = name;
-            localStorage.setItem('gb_user_v3', name);
-            if(!localStorage.getItem('gb_level_v3_' + name)) {
-                localStorage.setItem('gb_level_v3_' + name, 1);
-                localStorage.setItem('gb_status_v3_' + name, "ready");
-            }
+            const n = document.getElementById('candidateName').value.trim();
+            if(!n) return alert("Enter Name!");
+            localStorage.setItem('elite_user', n);
             location.reload();
         }
 
         function logout() { localStorage.clear(); location.reload(); }
 
+        // --- GLOBAL CHAT SYSTEM ---
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if(!msg) return;
+
+            db.ref('global_chat').push({
+                name: user.name,
+                text: msg,
+                time: Date.now()
+            });
+            input.value = '';
+        }
+
+        function listenToChat() {
+            const box = document.getElementById('chatBox');
+            db.ref('global_chat').limitToLast(20).on('value', (snap) => {
+                box.innerHTML = '';
+                snap.forEach((child) => {
+                    const data = child.val();
+                    box.innerHTML += `
+                        <div class="msg-card">
+                            <span class="msg-name">${data.name}</span>
+                            <p class="msg-text">${data.text}</p>
+                        </div>
+                    `;
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        // --- LEVELS & ADMIN ---
         function renderLevels() {
-            const container = document.getElementById('levelContainer');
-            container.innerHTML = '';
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
             for(let i=1; i<=10; i++) {
-                let statusClass = i > user.level ? 'locked' : '';
-                let statusText = i > user.level ? 'LOCKED' : 'AVAILABLE';
-                
-                if(i === user.level && user.status === "pending") {
-                    statusClass = 'pending';
-                    statusText = 'PENDING APPROVAL';
-                }
-
-                container.innerHTML += `
-                    <div onclick="openTest(${i}, '${statusClass}')" class="level-card p-10 text-center shadow-sm border-2 ${statusClass}">
-                        <div class="text-5xl mb-4">${statusClass === 'locked' ? '🔒' : '🎖️'}</div>
-                        <h4 class="font-black text-slate-800 uppercase">Level ${i}</h4>
-                        <p class="text-[10px] font-black mt-2 ${statusClass === 'pending' ? 'text-amber-600' : 'text-blue-500'}">${statusText}</p>
+                let locked = i > user.level;
+                grid.innerHTML += `
+                    <div class="level-card p-8 text-center shadow-md border-2 ${locked ? 'locked' : 'border-white'}">
+                        <div class="text-4xl mb-2">${locked ? '🔒' : '🎖️'}</div>
+                        <h4 class="font-black text-sm">LEVEL ${i}</h4>
                     </div>
                 `;
             }
-            updateAdminPanel();
+            updateAdmin();
         }
 
-        function openTest(num, state) {
-            if(state === 'locked') return alert("Complete previous level first!");
-            if(state === 'pending') return alert("Wait for Admin to approve your result!");
-            
-            document.getElementById('testBox').classList.remove('hidden');
-            const quiz = document.getElementById('quizContent');
-            quiz.innerHTML = '';
-            questionsData.forEach((item, idx) => {
-                quiz.innerHTML += `
-                    <div class="q-card">
-                        <p class="font-bold text-lg mb-4">Q${idx+1}: ${item.q}</p>
-                        <div class="space-y-2">
-                            <label class="option-label"><input type="radio" name="q${idx}" value="a"> ${item.a}</label>
-                            <label class="option-label"><input type="radio" name="q${idx}" value="b"> ${item.b}</label>
-                            <label class="option-label"><input type="radio" name="q${idx}" value="c"> ${item.c}</label>
-                            <label class="option-label"><input type="radio" name="q${idx}" value="d"> ${item.d}</label>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        function submitExam() {
-            let score = 0;
-            questionsData.forEach((item, idx) => {
-                const selected = document.querySelector(`input[name="q${idx}"]:checked`);
-                if(selected && selected.value === item.ans) score += 20;
-            });
-
-            if(score < 50) {
-                alert(`Result: ${score}%. You Failed! Need 50% to pass. Try Again.`);
-                location.reload();
-            } else {
-                alert(`Result: ${score}%. PASSED! Your request sent to Admin for Level Unlocking.`);
-                user.status = "pending";
-                localStorage.setItem('gb_status_v3_' + user.name, "pending");
-                localStorage.setItem('gb_score_v3_' + user.name, score);
-                location.reload();
+        function triggerGod() {
+            godTaps++;
+            if(godTaps === 4) {
+                const p = prompt("ENTER GOD MODE KEY:");
+                if(p === "prime786") { showTab('godPanel'); alert("GOD MODE ACTIVE"); }
+                godTaps = 0;
             }
         }
 
-        function triggerAdmin() {
-            tapCount++;
-            if(tapCount === 4) {
-                const key = prompt("Enter Secret Admin Key:");
-                if(key === "prime786") {
-                    showTab('adminPanel');
-                    alert("Admin Access Granted!");
-                }
-                tapCount = 0;
-            }
-        }
-
-        function updateAdminPanel() {
-            const panel = document.getElementById('approvalRequests');
+        function updateAdmin() {
+            const area = document.getElementById('adminArea');
             if(user.status === "pending") {
-                panel.innerHTML = `
-                    <div class="bg-white p-6 rounded-2xl flex justify-between items-center shadow-lg">
-                        <div>
-                            <p class="font-black text-xl">${user.name}</p>
-                            <p class="text-sm text-gray-500">Level: ${user.level} | Score: ${localStorage.getItem('gb_score_v3_' + user.name)}%</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="approveLevel()" class="bg-green-500 text-white px-6 py-2 rounded-xl font-bold">Approve</button>
-                            <button onclick="rejectLevel()" class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold">Reject</button>
-                        </div>
+                area.innerHTML = `
+                    <div class="bg-white p-4 rounded-2xl flex justify-between items-center text-black">
+                        <span class="font-black">${user.name} (Level ${user.level})</span>
+                        <button onclick="godApprove()" class="bg-green-600 text-white px-4 py-1 rounded-xl font-bold">Approve</button>
                     </div>
                 `;
             }
         }
 
-        function approveLevel() {
-            user.level++;
-            user.status = "ready";
-            localStorage.setItem('gb_level_v3_' + user.name, user.level);
-            localStorage.setItem('gb_status_v3_' + user.name, "ready");
-            alert("Level Approved Successfully!");
-            location.reload();
-        }
-
-        function rejectLevel() {
-            user.status = "ready";
-            localStorage.setItem('gb_status_v3_' + user.name, "ready");
-            alert("Level Rejected. Student must re-take the exam.");
+        function godApprove() {
+            localStorage.setItem('elite_lvl_' + user.name, user.level + 1);
+            localStorage.setItem('elite_status_' + user.name, "ready");
             location.reload();
         }
 
