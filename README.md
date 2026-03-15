@@ -2,93 +2,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GBTS Pro Max | Elite Recruitment Hub</title>
+    <title>GBTS Elite | Leaderboard & Training</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap');
-        body { font-family: 'Outfit', sans-serif; background: #f1f5f9; color: #0f172a; }
+        body { font-family: 'Outfit', sans-serif; background: #f8fafc; color: #0f172a; }
         .tab-content { display: none; }
-        .active-tab { display: block; animation: slideUp 0.4s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .level-card { transition: 0.3s; cursor: pointer; border-radius: 35px; }
-        .level-card:hover:not(.locked) { transform: translateY(-5px); border-color: #1e3a8a; background: #fff; }
+        .active-tab { display: block; animation: fadeInUp 0.4s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .glass-nav { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+        .level-card { transition: 0.3s; cursor: pointer; border-radius: 30px; }
         .locked { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
-        .quiz-modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
+        .quiz-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; p: 20px; }
+        .rank-1 { background: linear-gradient(90deg, #fbbf24, #f59e0b); color: white; }
     </style>
 </head>
-<body class="pb-20">
+<body class="pb-24">
 
     <div id="quizModal" class="quiz-modal">
-        <div class="bg-white p-8 rounded-[40px] max-w-xl w-full shadow-2xl overflow-y-auto max-h-[90vh]">
-            <div class="flex justify-between items-center mb-6">
-                <h3 id="mTitle" class="text-2xl font-black text-blue-900 italic">TEST MODULE</h3>
-                <button onclick="closeQuiz()" class="text-red-500 font-black">CLOSE</button>
+        <div class="bg-white p-8 rounded-[40px] max-w-lg w-full shadow-2xl relative">
+            <div id="timer" class="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-600 text-white px-8 py-2 rounded-full font-black shadow-xl border-4 border-white">
+                ⏱️ <span id="timeSec">30</span>s
             </div>
-            <div id="mStudy" class="bg-blue-50 p-6 rounded-3xl mb-6 text-sm text-blue-900 border border-blue-100">
-                </div>
-            <div id="mQuestion" class="space-y-4">
-                </div>
+            <h3 id="mTitle" class="text-2xl font-black text-blue-900 mb-4 uppercase italic">Test</h3>
+            <div id="mStudy" class="text-sm bg-blue-50 p-4 rounded-2xl mb-6 border border-blue-100 text-blue-800 italic"></div>
+            <div id="mQuestion" class="space-y-4"></div>
         </div>
     </div>
 
-    <div id="loginScreen" class="fixed inset-0 bg-slate-900 z-[5000] flex items-center justify-center p-6 hidden">
-        <div class="bg-white p-12 rounded-[50px] max-w-md w-full text-center shadow-2xl border-t-[10px] border-blue-900">
-            <h2 class="text-4xl font-black text-blue-900 mb-2 italic">GBTS LOGIN</h2>
-            <p class="text-[10px] font-black text-gray-400 mb-8 tracking-widest uppercase">Candidate Admission System</p>
-            <input id="uName" type="text" placeholder="Full Name" class="w-full p-5 bg-gray-50 rounded-3xl mb-4 outline-none border-2 focus:border-blue-600 text-center font-black">
-            <button onclick="saveUser()" class="w-full bg-blue-900 text-white py-5 rounded-3xl font-black text-xl hover:bg-blue-800 transition">VERIFY & START</button>
-        </div>
-    </div>
-
-    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 p-4 flex justify-between items-center px-8 border-b">
+    <nav class="glass-nav sticky top-0 z-50 p-4 flex justify-between items-center px-8 border-b">
         <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-blue-900 text-white flex items-center justify-center rounded-lg font-black text-xs">G</div>
-            <h1 class="font-black text-xl italic text-blue-950">GBTS ELITE</h1>
+            <h1 class="font-black text-lg italic text-blue-900">GBTS ELITE</h1>
         </div>
         <div class="flex gap-4">
             <button onclick="showTab('dashTab')" class="text-[10px] font-black uppercase text-blue-900">Portal</button>
-            <button onclick="showTab('chatTab')" class="text-[10px] font-black uppercase text-gray-400">Chat</button>
+            <button onclick="showTab('rankTab')" class="text-[10px] font-black uppercase text-gray-500">Leaderboard</button>
             <button onclick="logout()" class="text-[10px] font-black uppercase text-red-500">Exit</button>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto p-6 mt-6">
+    <main class="max-w-6xl mx-auto p-6">
+        
         <div id="dashTab" class="tab-content active-tab">
-            <div class="bg-blue-900 p-10 rounded-[50px] text-white shadow-2xl mb-12 relative overflow-hidden">
-                <div class="relative z-10">
-                    <p class="text-[10px] font-black opacity-50 uppercase mb-4 tracking-widest">Candidate Application Status</p>
-                    <h2 id="dispName" class="text-5xl font-black italic mb-2 tracking-tighter uppercase leading-none">---</h2>
-                    <div class="flex gap-4 mt-6">
-                        <span class="bg-green-500 text-white text-[10px] font-black px-4 py-2 rounded-full">LEVEL <span id="dispLvl">01</span> ACTIVE</span>
-                        <span class="bg-white/10 text-white text-[10px] font-black px-4 py-2 rounded-full">RANK: ELITE</span>
-                    </div>
+            <div class="bg-blue-900 p-10 rounded-[45px] text-white shadow-2xl mb-12 flex justify-between items-center">
+                <div>
+                    <p class="text-[10px] font-black opacity-50 uppercase mb-2">Authenticated User</p>
+                    <h2 id="dispName" class="text-4xl font-black italic tracking-tighter uppercase">---</h2>
                 </div>
-                <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+                <div class="text-right">
+                    <p class="text-[10px] font-black opacity-50">LEVEL</p>
+                    <h2 id="dispLvl" class="text-5xl font-black">01</h2>
+                </div>
             </div>
-
-            <h3 class="text-2xl font-black italic uppercase mb-8 tracking-tighter">Mission Modules (1-10)</h3>
+            <h3 class="text-2xl font-black italic uppercase mb-8">Mission Training</h3>
             <div id="levelGrid" class="grid grid-cols-2 md:grid-cols-5 gap-6"></div>
         </div>
 
-        <div id="chatTab" class="tab-content">
-            <div class="max-w-3xl mx-auto bg-white rounded-[50px] p-8 shadow-2xl border">
-                <div id="chatBox" class="h-96 overflow-y-auto mb-6 pr-4 space-y-4"></div>
-                <div class="flex gap-2">
-                    <input id="chatInp" type="text" placeholder="Discuss with other candidates..." class="flex-1 p-4 bg-gray-100 rounded-3xl outline-none font-bold">
-                    <button onclick="sendMsg()" class="bg-blue-900 text-white px-8 rounded-3xl font-black">SEND</button>
+        <div id="rankTab" class="tab-content">
+            <div class="max-w-2xl mx-auto bg-white rounded-[50px] p-8 shadow-sm border border-gray-100">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-black italic text-blue-950 uppercase">Top 10 Officers</h2>
+                    <p class="text-[10px] font-bold text-gray-400">REAL-TIME RANKING SYSTEM</p>
                 </div>
+                <div id="leaderList" class="space-y-3">
+                    </div>
             </div>
         </div>
+
     </main>
 
-    <footer class="mt-20 p-10 text-center opacity-30">
-        <span onclick="tAdmin()" class="cursor-pointer text-[10px] text-blue-300 font-bold">ROOT_ACCESS_PRIME_2026</span>
-    </footer>
-
     <script>
-        // CONFIG
         const firebaseConfig = {
           apiKey: "AIzaSyCMG6KG_oD8cjEk4YpbxXik-C5q8K5MDHk",
           authDomain: "dark-web-9.firebaseapp.com",
@@ -102,72 +88,37 @@
         const db = firebase.database();
 
         let me = { name: "", level: 1 };
-        let taps = 0;
+        let timer = null;
 
-        // QUIZ DATA 1-10
-        const moduleData = {
-            1: { 
-                study: "<b>English:</b> Synonyms are words with similar meanings. Example: 'Happy' = 'Joyful'.",
-                q: "What is the synonym of 'Fast'?", a: "Quick" 
-            },
-            2: { 
-                study: "<b>GK:</b> K2 is the 2nd highest peak in the world, located in the Karakoram range, Gilgit-Baltistan.",
-                q: "In which mountain range is K2 located?", a: "Karakoram" 
-            },
-            3: { 
-                study: "<b>Islamiyat:</b> The Battle of Badr took place in 2nd Hijri. 313 Muslims fought.",
-                q: "How many Muslims fought in the Battle of Badr?", a: "313" 
-            },
-            4: { 
-                study: "<b>Math:</b> To find 10% of a number, divide it by 10.",
-                q: "What is 10% of 500?", a: "50" 
-            },
-            5: { 
-                study: "<b>Current Affairs:</b> The capital of Gilgit-Baltistan is Gilgit.",
-                q: "What is the capital of GB?", a: "Gilgit" 
-            },
-            6: { 
-                study: "<b>English:</b> Antonyms are opposites. Example: 'Big' vs 'Small'.",
-                q: "Antonym of 'Beautiful'?", a: "Ugly" 
-            },
-            7: { 
-                study: "<b>GK:</b> Pakistan's national flower is Jasmine.",
-                q: "What is the national flower of Pakistan?", a: "Jasmine" 
-            },
-            8: { 
-                study: "<b>Math:</b> Average = Sum of values / Number of values.",
-                q: "Average of 10, 20, 30?", a: "20" 
-            },
-            9: { 
-                study: "<b>Islamiyat:</b> Prophet Muhammad (PBUH) had 4 daughters.",
-                q: "How many daughters did the Prophet (PBUH) have?", a: "4" 
-            },
-            10: { 
-                study: "<b>Final Exam:</b> Combine all knowledge. GB has 14 districts.",
-                q: "Total districts in Gilgit-Baltistan?", a: "14" 
-            }
+        const mods = {
+            1: { s: "GK: GB has 14 districts.", q: "How many districts in GB?", a: "14" },
+            2: { s: "Math: 5x5 is 25.", q: "What is 5 multiplied by 5?", a: "25" },
+            3: { s: "Eng: 'Big' synonym is 'Huge'.", q: "Synonym of Big?", a: "Huge" }
         };
 
         window.onload = () => {
-            const saved = localStorage.getItem('gbts_user');
+            const saved = localStorage.getItem('officer_n');
             if(saved) {
                 me.name = saved;
-                me.level = parseInt(localStorage.getItem('gbts_lvl')) || 1;
+                me.level = parseInt(localStorage.getItem('officer_l')) || 1;
                 document.getElementById('dispName').innerText = me.name;
                 document.getElementById('dispLvl').innerText = me.level;
                 renderLevels();
-                listenChat();
+                updateLeaderboard();
+                // Push or update my data to Firebase for Leaderboard
+                syncData();
             } else {
-                document.getElementById('loginScreen').classList.remove('hidden');
+                let n = prompt("Enter Your Full Name for Admission:");
+                if(n) {
+                    localStorage.setItem('officer_n', n);
+                    localStorage.setItem('officer_l', 1);
+                    location.reload();
+                }
             }
         };
 
-        function saveUser() {
-            const n = document.getElementById('uName').value.trim();
-            if(!n) return;
-            localStorage.setItem('gbts_user', n);
-            localStorage.setItem('gbts_lvl', 1);
-            location.reload();
+        function syncData() {
+            db.ref('ranks/' + me.name).set({ name: me.name, level: me.level });
         }
 
         function renderLevels() {
@@ -178,68 +129,73 @@
                 grid.innerHTML += `
                     <div onclick="openMod(${i}, ${lock})" class="level-card p-10 text-center bg-white border-2 ${lock ? 'locked' : 'border-blue-100 shadow-sm'}">
                         <div class="text-4xl mb-3">${lock ? '🔒' : '🎖️'}</div>
-                        <h4 class="font-black text-[10px] uppercase tracking-widest">Level 0${i}</h4>
+                        <h4 class="font-black text-[10px] uppercase">Level 0${i}</h4>
                     </div>
                 `;
             }
         }
 
-        function openMod(num, isLocked) {
-            if(isLocked) return alert("Pehly pichla level mukammal karein sweetie!");
+        function openMod(num, lock) {
+            if(lock) return alert("Level locked sweetie!");
+            const data = mods[num] || { s: "Keep going!", q: "Type 'go' to pass", a: "go" };
             document.getElementById('quizModal').style.display = 'flex';
-            const data = moduleData[num];
-            document.getElementById('mTitle').innerText = "MODULE 0" + num;
-            document.getElementById('mStudy').innerHTML = data.study;
+            document.getElementById('mTitle').innerText = "Level " + num;
+            document.getElementById('mStudy').innerHTML = data.s;
             document.getElementById('mQuestion').innerHTML = `
-                <p class="font-bold text-gray-700">${data.q}</p>
-                <input id="ans" type="text" placeholder="Apna jawab likhein..." class="w-full p-4 bg-gray-100 rounded-2xl outline-none font-bold border-2 focus:border-blue-900">
-                <button onclick="verify(${num}, '${data.a}')" class="w-full bg-blue-900 text-white py-4 rounded-2xl font-black">SUBMIT TEST</button>
+                <p class="font-bold mb-4">${data.q}</p>
+                <input id="ansInp" type="text" placeholder="Your Answer..." class="w-full p-4 bg-gray-100 rounded-2xl outline-none font-bold">
+                <button onclick="checkAns(${num}, '${data.a}')" class="w-full bg-blue-900 text-white py-4 mt-4 rounded-2xl font-black">SUBMIT</button>
             `;
+            startTimer();
         }
 
-        function verify(lvl, correct) {
-            const u = document.getElementById('ans').value.trim().toLowerCase();
-            if(u === correct.toLowerCase()) {
-                alert("Mubarak ho sweetie! Sahi jawab.");
-                if(me.level === lvl) {
-                    me.level++;
-                    localStorage.setItem('gbts_lvl', me.level);
+        function startTimer() {
+            let sec = 30;
+            document.getElementById('timeSec').innerText = sec;
+            clearInterval(timer);
+            timer = setInterval(() => {
+                sec--;
+                document.getElementById('timeSec').innerText = sec;
+                if(sec <= 0) {
+                    clearInterval(timer);
+                    alert("TIME OUT! Try again sweetie.");
+                    location.reload();
                 }
-                closeQuiz();
+            }, 1000);
+        }
+
+        function checkAns(num, correct) {
+            const val = document.getElementById('ansInp').value.trim().toLowerCase();
+            if(val === correct.toLowerCase()) {
+                clearInterval(timer);
+                alert("CORRECT!");
+                if(me.level === num) {
+                    me.level++;
+                    localStorage.setItem('officer_l', me.level);
+                    syncData();
+                }
                 location.reload();
-            } else {
-                alert("Ghalat jawab! Study material dobara parhein.");
-            }
+            } else { alert("Wrong Answer!"); }
         }
 
-        function closeQuiz() { document.getElementById('quizModal').style.display = 'none'; }
-
-        function sendMsg() {
-            const t = document.getElementById('chatInp').value.trim();
-            if(!t) return;
-            db.ref('elite_chat').push({ name: me.name, text: t });
-            document.getElementById('chatInp').value = '';
-        }
-
-        function listenChat() {
-            db.ref('elite_chat').limitToLast(10).on('value', snap => {
-                const box = document.getElementById('chatBox');
-                box.innerHTML = '';
-                snap.forEach(c => {
-                    const d = c.val();
-                    box.innerHTML += `<div class="p-4 rounded-3xl ${d.name === me.name ? 'bg-blue-900 text-white ml-auto' : 'bg-gray-100 mr-auto'} max-w-[80%]"><p class="text-[8px] font-black uppercase opacity-60 mb-1">${d.name}</p><p class="text-sm font-bold">${d.text}</p></div>`;
+        function updateLeaderboard() {
+            db.ref('ranks').orderByChild('level').limitToLast(10).on('value', snap => {
+                const list = document.getElementById('leaderList');
+                list.innerHTML = '';
+                let ranks = [];
+                snap.forEach(c => ranks.push(c.val()));
+                ranks.reverse().forEach((r, index) => {
+                    list.innerHTML += `
+                        <div class="flex justify-between items-center p-5 rounded-3xl ${index === 0 ? 'rank-1 shadow-lg' : 'bg-gray-50'}">
+                            <div class="flex items-center gap-4">
+                                <span class="font-black opacity-50">#${index + 1}</span>
+                                <span class="font-black uppercase italic text-sm">${r.name}</span>
+                            </div>
+                            <span class="bg-blue-900 text-white text-[10px] px-4 py-1 rounded-full font-black">LVL ${r.level}</span>
+                        </div>
+                    `;
                 });
-                box.scrollTop = box.scrollHeight;
             });
-        }
-
-        function tAdmin() {
-            taps++;
-            if(taps === 5) {
-                let p = prompt("Enter Admin Key:");
-                if(p === "prime786") alert("Admin Access Granted!");
-                taps = 0;
-            }
         }
 
         function showTab(id) {
