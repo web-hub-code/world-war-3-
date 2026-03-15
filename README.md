@@ -2,99 +2,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GBTS God-Mode Elite | Prime Solutions</title>
+    <title>GBTS Pro Max | Elite Recruitment Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap');
-        body { font-family: 'Outfit', sans-serif; background: #f0f4f8; color: #1e293b; transition: 0.3s; }
+        body { font-family: 'Outfit', sans-serif; background: #f4f7fa; color: #0f172a; transition: 0.3s; }
         .tab-content { display: none; }
-        .active-tab { display: block; animation: zoomIn 0.3s ease; }
-        @keyframes zoomIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        .active-tab { display: block; animation: fadeInUp 0.4s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Advanced Chat */
-        #chatBox { height: 450px; overflow-y: auto; scroll-behavior: smooth; display: flex; flex-direction: column; gap: 10px; padding: 15px; }
-        .msg-bubble { background: white; padding: 12px 16px; border-radius: 20px 20px 20px 5px; max-width: 85%; position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .reply-box { font-size: 11px; background: #f1f5f9; padding: 5px 10px; border-left: 3px solid #1e3a8a; border-radius: 5px; margin-bottom: 5px; color: #64748b; }
-        .react-btn { font-size: 14px; cursor: pointer; transition: 0.2s; }
-        .react-btn:hover { transform: scale(1.3); }
-
-        /* Lock Screen */
-        #lockOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 5000; color: white; flex-direction: column; align-items: center; justify-content: center; }
-        .banned-msg { display: none; position: fixed; inset: 0; background: white; z-index: 4000; flex-direction: column; align-items: center; justify-content: center; text-align: center; p: 20px; }
+        /* Advanced Chat & UI */
+        #chatBox, #supportBox { height: 400px; overflow-y: auto; scroll-behavior: smooth; display: flex; flex-direction: column; gap: 8px; }
+        .msg-bubble { background: white; padding: 12px 16px; border-radius: 20px 20px 20px 5px; max-width: 85%; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; }
+        .self-msg { align-self: flex-end; background: #1e3a8a; color: white; border-radius: 20px 20px 5px 20px; }
+        .reply-preview { font-size: 10px; opacity: 0.7; border-left: 2px solid #3b82f6; padding-left: 5px; margin-bottom: 5px; }
+        
+        /* Avatar & Lockdown */
+        .avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #1e3a8a; object-fit: cover; }
+        #lockOverlay { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; color: white; display: flex; align-items: center; justify-content: center; text-align: center; }
+        #banOverlay { display: none; position: fixed; inset: 0; background: white; z-index: 9998; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body class="pb-20">
 
-    <div id="lockOverlay">
-        <h1 class="text-6xl font-black mb-4 text-red-600 animate-pulse">LOCKDOWN</h1>
-        <p class="text-xl font-bold uppercase tracking-widest">System Maintenance in Progress</p>
-    </div>
-
-    <div id="banScreen" class="banned-msg">
-        <h1 class="text-7xl mb-4">🚫</h1>
-        <h2 class="text-4xl font-black text-red-600 mb-2">ACCESS DENIED</h2>
-        <p class="font-bold text-slate-500">Aapko administration ne block kar diya hai.<br>Mazeed maloomat ke liye helpline par raabta karein.</p>
-    </div>
-
-    <div id="loginScreen" class="fixed inset-0 bg-slate-900 z-[2000] flex items-center justify-center p-6 hidden">
-        <div class="bg-white p-12 rounded-[50px] max-w-md w-full text-center shadow-2xl">
-            <h2 class="text-4xl font-black text-blue-900 mb-6 italic">PRIME ACADEMY</h2>
-            <input id="uInput" type="text" placeholder="Apna Name Likhein" class="w-full p-5 bg-gray-100 rounded-3xl mb-4 outline-none font-bold text-center border-2 border-transparent focus:border-blue-600">
-            <button onclick="doLogin()" class="w-full bg-blue-900 text-white py-4 rounded-3xl font-black text-lg">ENTER HUB</button>
+    <div id="lockOverlay" class="hidden">
+        <div>
+            <h1 class="text-6xl font-black text-red-600 mb-4 animate-pulse">LOCKDOWN</h1>
+            <p class="text-xl opacity-60">System is under maintenance by Admin.</p>
         </div>
     </div>
 
-    <nav class="bg-white sticky top-0 z-50 p-4 border-b flex justify-between items-center px-8 shadow-sm">
-        <h1 class="font-black text-xl italic text-blue-900">PRIME HUB</h1>
-        <div class="flex gap-5">
-            <button onclick="showTab('levelsTab')" class="text-[10px] font-black uppercase text-blue-900">Exams</button>
-            <button onclick="showTab('chatTab')" class="text-[10px] font-black uppercase text-slate-500">Discussion</button>
-            <button onclick="showTab('godPanel')" id="adminLink" class="hidden text-[10px] font-black uppercase text-red-600 border-2 border-red-600 px-2 rounded">God Mode</button>
-            <button onclick="logout()" class="text-[10px] font-black uppercase text-red-500">Logout</button>
+    <div id="banOverlay" class="hidden">
+        <h1 class="text-8xl mb-4">🚫</h1>
+        <h2 class="text-4xl font-black text-red-600 mb-2">ACCESS DENIED</h2>
+        <p class="font-bold text-gray-500 text-center px-6">Your account has been restricted for violating terms.</p>
+    </div>
+
+    <div id="loginScreen" class="fixed inset-0 bg-[#0f172a] z-[5000] flex items-center justify-center p-6 hidden">
+        <div class="bg-white p-12 rounded-[50px] max-w-md w-full text-center shadow-2xl">
+            <h2 class="text-4xl font-black text-blue-900 mb-4 italic">PRIME ACADEMY</h2>
+            <input id="uName" type="text" placeholder="Full Name" class="w-full p-5 bg-gray-50 rounded-2xl mb-4 outline-none border-2 focus:border-blue-600 text-center font-bold">
+            <p class="text-[10px] font-bold text-gray-400 mb-4 uppercase">Select Avatar</p>
+            <div class="flex justify-center gap-4 mb-8">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="avatar cursor-pointer hover:scale-125" onclick="setAvatar(this.src)">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" class="avatar cursor-pointer hover:scale-125" onclick="setAvatar(this.src)">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="avatar cursor-pointer hover:scale-125" onclick="setAvatar(this.src)">
+            </div>
+            <button onclick="saveUser()" class="w-full bg-blue-900 text-white py-5 rounded-2xl font-black text-lg shadow-xl">START TRAINING</button>
+        </div>
+    </div>
+
+    <nav class="bg-white sticky top-0 z-50 p-4 border-b flex justify-between items-center px-6 shadow-sm">
+        <div class="flex items-center gap-2">
+            <img id="myAvatar" src="" class="w-8 h-8 rounded-full border border-blue-900">
+            <h1 class="font-black text-lg italic text-blue-900">GBTS ELITE</h1>
+        </div>
+        <div class="flex gap-4 md:gap-6">
+            <button onclick="showTab('levelsTab')" class="text-[10px] font-black uppercase text-blue-900">Training</button>
+            <button onclick="showTab('chatTab')" class="text-[10px] font-black uppercase text-gray-500">Group Chat</button>
+            <button onclick="showTab('supportTab')" class="text-[10px] font-black uppercase text-gray-500">Support</button>
+            <button onclick="showTab('godTab')" id="godBtn" class="hidden text-[10px] font-black uppercase text-red-600 border px-2 border-red-600 rounded">God Mode</button>
         </div>
     </nav>
 
     <main class="max-w-6xl mx-auto p-4 mt-6">
         
         <div id="levelsTab" class="tab-content active-tab">
+            <h2 class="text-3xl font-black mb-8 italic uppercase tracking-tighter">Mission Progress</h2>
             <div id="levelGrid" class="grid grid-cols-2 md:grid-cols-5 gap-6"></div>
         </div>
 
         <div id="chatTab" class="tab-content">
-            <div class="max-w-3xl mx-auto bg-slate-100 rounded-[40px] p-6 shadow-inner">
-                <div id="replyPreview" class="hidden bg-blue-100 p-3 rounded-2xl mb-2 flex justify-between items-center">
-                    <span id="replyingToText" class="text-xs font-bold text-blue-900 italic"></span>
-                    <button onclick="cancelReply()" class="text-red-500 font-black">×</button>
+            <div class="max-w-3xl mx-auto bg-white rounded-[40px] p-6 shadow-xl border border-gray-100">
+                <div id="replyArea" class="hidden bg-blue-50 p-3 rounded-xl mb-2 flex justify-between items-center text-xs italic">
+                    <span id="replyTxt"></span>
+                    <button onclick="cancelRep()" class="text-red-500 font-black">×</button>
                 </div>
                 <div id="chatBox"></div>
-                <div class="flex gap-2 mt-4 bg-white p-2 rounded-3xl shadow-lg">
-                    <input id="msgInput" type="text" placeholder="Type a message..." class="flex-1 p-4 outline-none font-medium">
-                    <button onclick="pushMsg()" class="bg-blue-900 text-white px-8 rounded-2xl font-black">SEND</button>
+                <div class="flex gap-2 mt-4 bg-gray-50 p-2 rounded-3xl">
+                    <input id="chatInp" type="text" placeholder="Ask anything..." class="flex-1 p-4 bg-transparent outline-none font-medium">
+                    <button onclick="sendGlobalMsg()" class="bg-blue-900 text-white px-8 rounded-2xl font-black">SEND</button>
                 </div>
             </div>
         </div>
 
-        <div id="godPanel" class="tab-content bg-slate-900 p-10 rounded-[50px] text-white">
-            <div class="flex justify-between items-center mb-10">
-                <h2 class="text-3xl font-black text-blue-400 italic">SYSTEM OVERRIDE</h2>
+        <div id="supportTab" class="tab-content">
+            <div class="max-w-3xl mx-auto bg-slate-900 rounded-[40px] p-8 text-white shadow-2xl">
+                <h3 class="text-2xl font-black mb-2 text-blue-400 italic">PRIVATE ADMIN SUPPORT</h3>
+                <p class="text-[10px] text-slate-400 mb-6 font-bold uppercase tracking-widest">Your conversation is strictly private</p>
+                <div id="supportBox" class="mb-4"></div>
                 <div class="flex gap-2">
-                    <button onclick="toggleLock()" class="bg-red-600 px-4 py-2 rounded-xl text-xs font-bold">LOCKDOWN SITE</button>
+                    <input id="supportInp" type="text" placeholder="Message Admin..." class="flex-1 p-4 rounded-2xl bg-slate-800 text-white outline-none border border-slate-700">
+                    <button onclick="sendPrivateMsg()" class="bg-blue-600 px-6 rounded-2xl font-black">CHAT</button>
                 </div>
             </div>
-            
+        </div>
+
+        <div id="godTab" class="tab-content bg-white p-10 rounded-[50px] shadow-2xl border-t-8 border-blue-900">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-black text-slate-900 italic">SYSTEM OVERRIDE</h2>
+                <button onclick="toggleLock()" class="bg-red-600 text-white px-6 py-2 rounded-xl font-bold text-xs">LOCKDOWN SITE</button>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-slate-800 p-6 rounded-3xl">
-                    <h4 class="text-yellow-500 font-black mb-4 uppercase text-xs">Approval Requests</h4>
-                    <div id="reqList" class="space-y-3"></div>
+                <div class="bg-gray-50 p-6 rounded-3xl">
+                    <h4 class="font-black text-xs text-blue-900 uppercase mb-4">Active Approval Requests</h4>
+                    <div id="pendingReqs"></div>
                 </div>
-                <div class="bg-slate-800 p-6 rounded-3xl">
-                    <h4 class="text-red-500 font-black mb-4 uppercase text-xs">User Management (Ban System)</h4>
-                    <div class="flex gap-2 mb-4">
-                        <input id="banInput" type="text" placeholder="User Name" class="flex-1 p-2 rounded bg-slate-700 text-white outline-none">
-                        <button onclick="manageUser(true)" class="bg-red-600 px-3 rounded font-bold">BAN</button>
-                        <button onclick="manageUser(false)" class="bg-green-600 px-3 rounded font-bold">UNBAN</button>
+                <div class="bg-gray-50 p-6 rounded-3xl">
+                    <h4 class="font-black text-xs text-red-600 uppercase mb-4">User Ban Control</h4>
+                    <div class="flex gap-2">
+                        <input id="banUser" type="text" placeholder="User Name" class="flex-1 p-3 rounded-xl border outline-none">
+                        <button onclick="banAction(true)" class="bg-red-600 text-white px-4 rounded-xl font-bold">BAN</button>
+                        <button onclick="banAction(false)" class="bg-green-600 text-white px-4 rounded-xl font-bold">OK</button>
                     </div>
                 </div>
             </div>
@@ -102,7 +123,7 @@
     </main>
 
     <footer class="fixed bottom-0 left-0 right-0 p-4 text-center">
-        <span onclick="triggerGod()" class="text-[8px] text-gray-400 opacity-20 cursor-default">PRIME_SOLUTIONS_GOD_KEY</span>
+        <span onclick="checkGodTaps()" class="text-[8px] text-gray-300 opacity-20 cursor-default">ROOT_ACCESS_PRIME_2026</span>
     </footer>
 
     <script>
@@ -119,144 +140,136 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let me = { name: "", level: 1, status: "ready", isGod: false };
-        let replyData = null;
-        let taps = 0;
+        let user = { name: "", level: 1, status: "ready", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" };
+        let currentReply = null;
+        let godTaps = 0;
 
         window.onload = () => {
-            const saved = localStorage.getItem('hub_user');
+            const saved = localStorage.getItem('e_user');
             if(saved) {
-                me.name = saved;
-                checkBanStatus();
-                listenLock();
-                listenChat();
-                renderLevels();
+                user.name = saved;
+                user.avatar = localStorage.getItem('e_avatar') || user.avatar;
+                user.level = parseInt(localStorage.getItem('e_lvl_'+saved)) || 1;
+                user.status = localStorage.getItem('e_status_'+saved) || "ready";
+                document.getElementById('myAvatar').src = user.avatar;
+                startApp();
             } else {
                 document.getElementById('loginScreen').classList.remove('hidden');
             }
         };
 
-        function doLogin() {
-            const n = document.getElementById('uInput').value.trim();
+        function setAvatar(src) { user.avatar = src; alert("Avatar Selected!"); }
+
+        function saveUser() {
+            const n = document.getElementById('uName').value.trim();
             if(!n) return;
-            localStorage.setItem('hub_user', n);
+            localStorage.setItem('e_user', n);
+            localStorage.setItem('e_avatar', user.avatar);
             location.reload();
         }
 
-        function logout() { localStorage.clear(); location.reload(); }
-
-        // --- CHAT WITH REPLIES & REACTIONS ---
-        function pushMsg() {
-            const txt = document.getElementById('msgInput').value.trim();
-            if(!txt) return;
-            db.ref('global_chat_v2').push({
-                name: me.name,
-                text: txt,
-                replyTo: replyData,
-                time: Date.now()
-            });
-            cancelReply();
-            document.getElementById('msgInput').value = '';
+        function startApp() {
+            listenBan();
+            listenLock();
+            listenGlobalChat();
+            listenPrivateChat();
+            renderLevels();
         }
 
-        function listenChat() {
-            db.ref('global_chat_v2').limitToLast(30).on('value', snap => {
+        // --- GLOBAL CHAT ---
+        function sendGlobalMsg() {
+            const t = document.getElementById('chatInp').value.trim();
+            if(!t) return;
+            db.ref('global_v3').push({ name: user.name, text: t, reply: currentReply, avatar: user.avatar, time: Date.now() });
+            cancelRep();
+            document.getElementById('chatInp').value = '';
+        }
+
+        function listenGlobalChat() {
+            db.ref('global_v3').limitToLast(30).on('value', snap => {
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
                 snap.forEach(c => {
                     const d = c.val();
                     const key = c.key;
                     box.innerHTML += `
-                        <div class="msg-bubble ${d.name === me.name ? 'self-end' : 'self-start'}">
-                            <span class="text-[10px] font-black text-blue-900 uppercase">${d.name}</span>
-                            ${d.replyTo ? `<div class="reply-box">Replying to: ${d.replyTo}</div>` : ''}
-                            <p class="text-sm font-medium">${d.text}</p>
-                            <div class="mt-2 flex gap-2">
-                                <span class="react-btn" onclick="addReact('${key}', '🔥')">🔥</span>
-                                <span class="react-btn" onclick="addReact('${key}', '👍')">👍</span>
-                                <span class="text-[10px] text-blue-400 font-bold ml-4 cursor-pointer" onclick="setReply('${d.name}', '${d.text}')">REPLY</span>
+                        <div class="msg-bubble ${d.name === user.name ? 'self-msg' : 'self-start'}">
+                            <div class="flex items-center gap-2 mb-1">
+                                <img src="${d.avatar}" class="w-4 h-4 rounded-full">
+                                <span class="text-[9px] font-black uppercase">${d.name}</span>
                             </div>
-                            <div id="react-${key}" class="text-[10px] mt-1 font-bold text-orange-500"></div>
+                            ${d.reply ? `<div class="reply-preview">Replying to: ${d.reply}</div>` : ''}
+                            <p class="text-sm font-medium">${d.text}</p>
+                            <div class="mt-2 flex gap-4 text-[10px] font-bold opacity-60">
+                                <span class="cursor-pointer" onclick="setRep('${d.name}', '${d.text}')">REPLY</span>
+                                <span class="cursor-pointer" onclick="addReact('${key}', '🔥')">🔥</span>
+                                <span id="r-${key}"></span>
+                            </div>
                         </div>
                     `;
-                    // Fetch Reactions
-                    db.ref('reactions/'+key).on('value', rSnap => {
-                        const rArea = document.getElementById('react-'+key);
-                        if(rArea && rSnap.val()) rArea.innerText = Object.values(rSnap.val()).join(' ');
+                    db.ref('reacts/'+key).on('value', rs => {
+                        const rArea = document.getElementById('r-'+key);
+                        if(rArea && rs.val()) rArea.innerText = Object.values(rs.val()).join('');
                     });
                 });
                 box.scrollTop = box.scrollHeight;
             });
         }
 
-        function setReply(name, text) {
-            replyData = name + ": " + text;
-            document.getElementById('replyPreview').classList.remove('hidden');
-            document.getElementById('replyingToText').innerText = "Replying to: " + name;
+        function setRep(n, t) { currentReply = n + ": " + t; document.getElementById('replyArea').classList.remove('hidden'); document.getElementById('replyTxt').innerText = "Replying to " + n; }
+        function cancelRep() { currentReply = null; document.getElementById('replyArea').classList.add('hidden'); }
+        function addReact(k, e) { db.ref('reacts/'+k).push(e); }
+
+        // --- PRIVATE SUPPORT ---
+        function sendPrivateMsg() {
+            const t = document.getElementById('supportInp').value.trim();
+            if(!t) return;
+            db.ref('support/'+user.name).push({ sender: user.name, text: t, time: Date.now() });
+            document.getElementById('supportInp').value = '';
         }
 
-        function cancelReply() {
-            replyData = null;
-            document.getElementById('replyPreview').classList.add('hidden');
-        }
-
-        function addReact(key, emoji) {
-            db.ref('reactions/'+key).push(emoji);
-        }
-
-        // --- BAN & LOCKDOWN SYSTEM ---
-        function checkBanStatus() {
-            db.ref('banned_users/' + me.name).on('value', snap => {
-                if(snap.val()) document.getElementById('banScreen').style.display = 'flex';
+        function listenPrivateChat() {
+            db.ref('support/'+user.name).on('value', snap => {
+                const box = document.getElementById('supportBox');
+                box.innerHTML = '';
+                snap.forEach(c => {
+                    const d = c.val();
+                    box.innerHTML += `<div class="p-3 rounded-2xl ${d.sender === 'Admin' ? 'bg-blue-900/50' : 'bg-slate-800'} text-xs mb-2"><b>${d.sender}:</b> ${d.text}</div>`;
+                });
+                box.scrollTop = box.scrollHeight;
             });
         }
 
-        function manageUser(ban) {
-            const target = document.getElementById('banInput').value.trim();
-            if(!target) return;
-            db.ref('banned_users/' + target).set(ban ? true : null);
-            alert(target + (ban ? " Banned!" : " Unbanned!"));
-            document.getElementById('banInput').value = '';
-        }
-
-        function toggleLock() {
-            db.ref('lockdown').once('value', snap => {
-                db.ref('lockdown').set(!snap.val());
-            });
-        }
-
-        function listenLock() {
-            db.ref('lockdown').on('value', snap => {
-                document.getElementById('lockOverlay').style.display = snap.val() ? 'flex' : 'none';
-            });
-        }
-
-        // --- GOD MODE TRIGGER ---
-        function triggerGod() {
-            taps++;
-            if(taps === 4) {
-                const p = prompt("ENTER SECRET GOD KEY:");
-                if(p === "prime786") {
-                    me.isGod = true;
-                    document.getElementById('adminLink').classList.remove('hidden');
-                    showTab('godPanel');
-                    alert("GOD MODE ACCESS GRANTED!");
-                }
-                taps = 0;
+        // --- ADMIN CONTROLS ---
+        function checkGodTaps() {
+            godTaps++;
+            if(godTaps === 4) {
+                const p = prompt("GOD MODE KEY:");
+                if(p === "prime786") { document.getElementById('godBtn').classList.remove('hidden'); showTab('godTab'); }
+                godTaps = 0;
             }
         }
+
+        function banAction(isBan) {
+            const t = document.getElementById('banUser').value.trim();
+            if(!t) return;
+            db.ref('bans/'+t).set(isBan ? true : null);
+            alert(t + (isBan ? " Banned!" : " Unbanned!"));
+        }
+
+        function listenBan() { db.ref('bans/'+user.name).on('value', snap => { if(snap.val()) document.getElementById('banOverlay').style.display='flex'; }); }
+        function toggleLock() { db.ref('siteLock').once('value', s => db.ref('siteLock').set(!s.val())); }
+        function listenLock() { db.ref('siteLock').on('value', s => document.getElementById('lockOverlay').style.display = s.val() ? 'flex' : 'none'); }
 
         function renderLevels() {
             const grid = document.getElementById('levelGrid');
             grid.innerHTML = '';
             for(let i=1; i<=10; i++) {
-                let locked = i > me.level;
-                grid.innerHTML += `
-                    <div class="level-card p-10 text-center shadow-lg ${locked ? 'locked' : 'border-white'}">
-                        <div class="text-5xl mb-3">${locked ? '🔒' : '🎖️'}</div>
-                        <h4 class="font-black text-xs">LEVEL ${i}</h4>
-                    </div>
-                `;
+                let l = i > user.level;
+                grid.innerHTML += `<div class="bg-white p-10 text-center rounded-[40px] shadow-sm ${l ? 'opacity-30' : 'border-2 border-blue-100'}">
+                    <div class="text-5xl mb-3">${l ? '🔒' : '🎖️'}</div>
+                    <h4 class="font-black text-xs">LEVEL ${i}</h4>
+                </div>`;
             }
         }
 
@@ -264,6 +277,8 @@
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
             document.getElementById(id).classList.add('active-tab');
         }
+
+        function logout() { localStorage.clear(); location.reload(); }
     </script>
 </body>
 </html>
