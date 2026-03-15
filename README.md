@@ -2,116 +2,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GBTS Pro Official | Prime Solutions</title>
+    <title>GBTS Pro | Prime Solutions Official</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap');
-        body { font-family: 'Outfit', sans-serif; background: #f0f4f8; overflow-x: hidden; }
+        body { font-family: 'Outfit', sans-serif; background: #f8fafc; overflow-x: hidden; }
         .tab-content { display: none; }
-        .active-tab { display: block; animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .level-card { transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border-radius: 35px; overflow: hidden; }
-        .level-card:hover:not(.locked) { transform: scale(1.05); box-shadow: 0 20px 30px -10px rgba(0,0,0,0.1); }
-        .locked { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; background: #e2e8f0; }
-        .quiz-modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
-        .progress-bar { transition: width 1s ease-in-out; }
+        .active-tab { display: block; animation: fadeInUp 0.5s ease; }
+        .glass-card { background: white; border-radius: 50px; box-shadow: 0 40px 70px -15px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.5); }
+        .level-card { transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; border-radius: 40px; background: white; border: 1px solid #e2e8f0; position: relative; }
+        .level-card:hover:not(.locked) { transform: scale(1.08); box-shadow: 0 20px 40px rgba(30, 58, 138, 0.1); border-color: #1e3a8a; }
+        .locked { opacity: 0.4; filter: grayscale(1); cursor: not-allowed; background: #f1f5f9; }
+        #loader { position: fixed; inset: 0; background: #0f172a; z-index: 10000; display: flex; flex-direction: column; items-center; justify-content: center; transition: 0.5s; }
+        .loader-circle { width: 60px; height: 60px; border: 6px solid #1e3a8a; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
+    <div id="loader">
+        <div class="loader-circle mb-4"></div>
+        <p class="text-white font-black tracking-[0.3em] uppercase italic animate__animated animate__pulse animate__infinite">GBTS Academy</p>
+    </div>
+
     <audio id="successSfx" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"></audio>
-    <audio id="errorSfx" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
 
-    <div id="loginOverlay" class="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center p-4 hidden">
-        <div class="bg-white p-10 rounded-[50px] max-w-md w-full shadow-2xl text-center border-b-[10px] border-blue-900">
-            <div class="w-16 h-16 bg-blue-900 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl font-black italic shadow-lg">GB</div>
-            <h2 id="adminTitle" onclick="handleAdminTap()" class="text-3xl font-black text-slate-900 mb-2 uppercase select-none">GBTS Entrance</h2>
-            <p class="text-[10px] font-bold text-blue-500 mb-8 uppercase tracking-widest">Official Academy Portal 2026</p>
-            
+    <div id="loginOverlay" class="fixed inset-0 bg-slate-900 z-[9998] flex items-center justify-center p-6 hidden">
+        <div class="glass-card p-10 md:p-14 max-w-md w-full text-center animate__animated animate__zoomIn">
+            <div class="w-20 h-20 bg-blue-900 text-white rounded-3xl flex items-center justify-center mx-auto mb-6 text-3xl font-black italic shadow-2xl">GB</div>
+            <h2 class="text-3xl font-black text-slate-900 mb-2 italic">ACADEMY LOGIN</h2>
+            <p class="text-[10px] font-black text-blue-500 mb-10 tracking-[0.4em] uppercase italic">Secure Admission 2026</p>
+
             <div class="space-y-4 mb-8">
-                <input id="uName" type="text" placeholder="Candidate Full Name" class="w-full p-5 bg-slate-50 rounded-3xl outline-none border-2 focus:border-blue-600 font-bold text-center">
-                <input id="uPin" type="password" maxlength="4" placeholder="4-Digit Security PIN" class="w-full p-5 bg-slate-50 rounded-3xl outline-none border-2 focus:border-blue-600 font-bold tracking-widest text-center">
+                <input id="uName" type="text" placeholder="Username" class="w-full p-5 bg-slate-100 rounded-3xl font-bold text-center outline-none border-2 border-transparent focus:border-blue-900 transition-all">
+                <input id="uPass" type="password" placeholder="Password" class="w-full p-5 bg-slate-100 rounded-3xl font-bold text-center outline-none border-2 border-transparent focus:border-blue-900 transition-all tracking-widest">
             </div>
-            
-            <button onclick="handleLogin()" class="w-full bg-blue-900 text-white py-5 rounded-[25px] font-black text-lg hover:bg-blue-800 transition active:scale-95 shadow-xl">VERIFY & ENTER</button>
-            <p class="mt-6 text-[9px] text-slate-400 font-bold">Safe System: Your PIN is your account key.</p>
+
+            <button onclick="handleLogin()" class="w-full bg-blue-900 text-white py-5 rounded-[30px] font-black text-lg shadow-xl hover:bg-blue-800 active:scale-95 transition-all">ENTER DASHBOARD</button>
         </div>
     </div>
 
-    <div id="quizModal" class="quiz-modal">
-        <div class="bg-white p-10 rounded-[50px] max-w-lg w-full relative shadow-2xl">
-            <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-600 text-white px-8 py-2 rounded-full font-black border-4 border-white shadow-xl">⏱️ <span id="timeSec">30</span>s</div>
-            <h3 id="mTitle" class="text-2xl font-black text-blue-950 mb-4 italic">Test Mode</h3>
-            <div id="mStudy" class="text-sm bg-blue-50 p-6 rounded-3xl mb-6 border border-blue-100 text-blue-900 italic leading-relaxed"></div>
-            <div id="mQuestionArea"></div>
-            <button onclick="closeQuiz()" class="mt-6 text-[10px] font-black text-slate-300 uppercase w-full">Cancel Examination</button>
-        </div>
-    </div>
-
-    <nav class="bg-white/90 backdrop-blur-md sticky top-0 z-50 p-4 px-8 flex justify-between items-center border-b border-slate-200">
+    <nav class="bg-white/90 backdrop-blur-xl sticky top-0 z-50 p-5 px-10 flex justify-between items-center border-b">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-900 text-white flex items-center justify-center rounded-xl font-black shadow-md">G</div>
-            <h1 class="font-black text-sm text-slate-900 uppercase">GBTS Academy</h1>
+            <div class="w-10 h-10 bg-blue-900 text-white flex items-center justify-center rounded-xl font-black italic shadow-md">G</div>
+            <h1 class="font-black text-sm text-slate-900 uppercase italic">GBTS Academy</h1>
         </div>
-        <div class="flex gap-5 font-black uppercase text-[10px]">
+        <div class="flex gap-6 items-center text-[10px] font-black uppercase italic">
             <button onclick="showTab('dashTab')" class="text-blue-900">Training</button>
-            <button onclick="showTab('rankTab')" class="text-slate-400">Merit</button>
-            <button onclick="showTab('idTab')" class="text-slate-400">ID Card</button>
-            <button onclick="logout()" class="text-red-500">Exit</button>
+            <button onclick="showTab('rankTab')" class="text-slate-400">Merit List</button>
+            <button onclick="logout()" class="text-red-500 bg-red-50 px-4 py-2 rounded-full">Exit</button>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto p-6">
+    <main class="max-w-6xl mx-auto p-6 mt-6">
         <div id="dashTab" class="tab-content active-tab">
-            <div class="bg-slate-900 p-10 rounded-[50px] text-white shadow-2xl mb-12 relative overflow-hidden">
-                <div class="relative z-10 grid md:grid-cols-2 gap-10">
-                    <div>
-                        <p class="text-[10px] font-black text-blue-400 mb-2 uppercase">Verified Candidate</p>
-                        <h2 id="dispName" class="text-4xl font-black italic uppercase mb-6 leading-none">---</h2>
-                        <span class="bg-white/10 px-5 py-2 rounded-xl text-xs font-bold border border-white/20">Current Level: <span id="dispLvl">01</span></span>
-                    </div>
-                    <div class="bg-white/5 p-6 rounded-3xl border border-white/10">
-                        <p class="text-[10px] font-black mb-2 opacity-50 uppercase">Completion Stats</p>
-                        <div class="w-full bg-white/10 h-3 rounded-full overflow-hidden mb-2">
-                            <div id="progBar" class="progress-bar h-full bg-blue-500" style="width: 0%"></div>
-                        </div>
-                        <p class="text-[10px] font-bold"><span id="progText">0</span>% Path Completed</p>
+            <div class="bg-slate-950 p-12 rounded-[60px] text-white shadow-2xl mb-12 relative overflow-hidden animate__animated animate__fadeIn">
+                <div class="relative z-10">
+                    <p class="text-[10px] font-black text-blue-400 mb-2 uppercase tracking-widest">Welcome Back</p>
+                    <h2 id="dispName" class="text-5xl font-black italic uppercase tracking-tighter mb-4 leading-none animate__animated animate__lightSpeedInLeft">---</h2>
+                    <div class="inline-flex bg-white/10 px-6 py-2 rounded-2xl text-[10px] font-black uppercase border border-white/10">
+                        Current Rank: <span id="dispLvl" class="ml-2 text-blue-400">01</span>
                     </div>
                 </div>
+                <div class="absolute -right-20 -top-20 w-80 h-80 bg-blue-600/10 rounded-full blur-[100px]"></div>
             </div>
-            <div id="levelGrid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-6"></div>
+            
+            <div class="flex justify-between items-center mb-10 px-4">
+                <h3 class="text-xl font-black uppercase italic text-slate-800">Learning Roadmap</h3>
+                <p class="text-[9px] font-bold text-slate-400 uppercase">12 Modules Total</p>
+            </div>
+            <div id="levelGrid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-8"></div>
         </div>
 
         <div id="rankTab" class="tab-content">
-            <div class="max-w-xl mx-auto bg-white p-10 rounded-[50px] shadow-lg">
-                <h3 class="text-2xl font-black text-center text-blue-950 mb-8 italic uppercase">Academy Merit List</h3>
+            <div class="max-w-md mx-auto bg-white p-12 rounded-[55px] shadow-sm border border-slate-100">
+                <h3 class="text-2xl font-black text-center text-blue-950 mb-10 italic uppercase tracking-tighter">Elite Merit List</h3>
                 <div id="leaderList" class="space-y-4"></div>
-            </div>
-        </div>
-
-        <div id="idTab" class="tab-content">
-            <div class="max-w-sm mx-auto bg-white p-10 rounded-[60px] shadow-2xl text-center border relative">
-                <div class="w-24 h-24 bg-blue-900 rounded-full mx-auto mb-6 flex items-center justify-center text-4xl text-white italic border-4 border-white shadow-xl">👤</div>
-                <h3 id="cardName" class="text-3xl font-black text-slate-900 mb-2 italic">---</h3>
-                <p class="text-[10px] font-black text-blue-500 mb-8 uppercase tracking-widest">Official Recruitment Pass</p>
-                <div class="bg-slate-50 p-4 rounded-3xl">
-                    <p class="text-[8px] font-black opacity-30 uppercase">System Identity</p>
-                    <p id="cardId" class="text-xs font-black">#UID-000000</p>
-                </div>
             </div>
         </div>
     </main>
 
-    <footer class="p-12 text-center text-[10px] font-black text-slate-300 uppercase tracking-widest">
-        Powered by Prime Solutions Technology
-    </footer>
+    <div id="quizModal" class="fixed inset-0 bg-slate-950/95 z-[10000] hidden items-center justify-center p-6 backdrop-blur-md">
+        <div class="bg-white p-12 rounded-[60px] max-w-lg w-full text-center shadow-2xl animate__animated animate__bounceIn">
+            <h3 id="mTitle" class="text-3xl font-black text-blue-950 mb-6 italic uppercase">Module Test</h3>
+            <div id="mStudy" class="bg-blue-50 p-8 rounded-[40px] mb-8 text-sm italic text-blue-900 border border-blue-100 leading-relaxed shadow-inner"></div>
+            <input id="ansInp" type="text" placeholder="Enter Answer" class="w-full p-6 bg-slate-50 rounded-3xl mb-6 text-center font-black border-2 border-transparent focus:border-blue-900 outline-none transition-all">
+            <button id="subBtn" class="w-full bg-blue-950 text-white py-5 rounded-[30px] font-black shadow-xl hover:bg-blue-800">VERIFY RESPONSE</button>
+            <button onclick="closeModal()" class="mt-6 text-[10px] font-black text-slate-300 uppercase tracking-widest">Close Test</button>
+        </div>
+    </div>
 
     <script>
-        // FIREBASE CONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyCMG6KG_oD8cjEk4YpbxXik-C5q8K5MDHk",
             authDomain: "dark-web-9.firebaseapp.com",
@@ -126,153 +112,122 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        let userData = { name: "", level: 1, pin: "" };
-        let timer = null, taps = 0;
-        const successSfx = document.getElementById('successSfx'), errorSfx = document.getElementById('errorSfx');
+        let userData = null;
 
-        // Study Material Data
-        const material = {
-            1: { s: "GK: Pakistan was founded in 1947.", q: "In which year was Pakistan founded?", a: "1947" },
-            2: { s: "Computer: CPU stands for Central Processing Unit.", q: "What does CPU stand for?", a: "Central Processing Unit" },
-            3: { s: "Math: A triangle has 3 sides.", q: "How many sides does a triangle have?", a: "3" }
-        };
-
-        // ADMIN SECRET TAP
-        function handleAdminTap() {
-            taps++;
-            if(taps >= 5) {
-                let p = prompt("Admin Authorization Code:");
-                if(p === "prime786") alert("Access Authorized.");
-                taps = 0;
-            }
-        }
-
-        // AUTH WATCHER
-        auth.onAuthStateChanged(user => {
-            if(user) {
-                document.getElementById('loginOverlay').classList.add('hidden');
-                loadData(user.uid);
-            } else {
-                document.getElementById('loginOverlay').classList.remove('hidden');
-            }
-        });
-
-        // SECURE LOGIN SYSTEM
+        // --- LOGIN & LOCAL STORAGE ---
         async function handleLogin() {
             const name = document.getElementById('uName').value.trim();
-            const pin = document.getElementById('uPin').value.trim();
-            if(!name || pin.length < 4) return alert("Sweetie, enter Name & 4-Digit PIN!");
+            const pass = document.getElementById('uPass').value.trim();
+            if(!name || !pass) return alert("Sweetie, Username aur Password lazmi hai!");
 
-            const path = btoa(name.toLowerCase().replace(/\s/g, '') + pin);
-            
+            localStorage.setItem('gbts_u', name);
+            localStorage.setItem('gbts_p', pass);
+            await startLoginProcess(name, pass);
+        }
+
+        async function startLoginProcess(name, pass) {
+            const safePath = btoa(name.toLowerCase().replace(/\s/g, '') + pass).substring(0, 20);
             try {
-                // Check if user exists in DB first
-                const snap = await db.ref('gbts_trusted/' + path).get();
+                const res = await auth.signInAnonymously();
+                const userRef = db.ref('gbts_final_secure/' + safePath);
+                const snap = await userRef.get();
+
+                if(!snap.exists()) {
+                    await userRef.set({ uid: res.user.uid, name, level: 1, pass, path: safePath });
+                }
                 
-                auth.signInAnonymously().then(res => {
-                    if(!snap.exists()) {
-                        db.ref('gbts_trusted/' + path).set({ 
-                            uid: res.user.uid, name, level: 1, pin, path 
-                        }).then(() => location.reload());
-                    } else {
-                        location.reload();
-                    }
-                }).catch(err => alert("Auth Error: Enable Anonymous Auth in Firebase Console!"));
+                document.getElementById('loginOverlay').style.display = 'none';
+                loadAppData(res.user.uid);
             } catch (e) {
-                alert("Database Error: Check your Firebase Rules!");
+                alert("Database Error: Check your Firebase Rules sweetie!");
             }
         }
 
-        function loadData(uid) {
-            db.ref('gbts_trusted').orderByChild('uid').equalTo(uid).on('value', snap => {
+        // --- APP INITIALIZATION ---
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+                
+                const savedU = localStorage.getItem('gbts_u');
+                const savedP = localStorage.getItem('gbts_p');
+                if(savedU && savedP) {
+                    startLoginProcess(savedU, savedP);
+                } else {
+                    document.getElementById('loginOverlay').style.display = 'flex';
+                }
+            }, 1500);
+        };
+
+        function loadAppData(uid) {
+            db.ref('gbts_final_secure').orderByChild('uid').equalTo(uid).on('value', snap => {
                 snap.forEach(c => {
                     userData = c.val();
-                    updateUI(userData);
+                    document.getElementById('dispName').innerText = userData.name;
+                    document.getElementById('dispLvl').innerText = userData.level < 10 ? "0"+userData.level : userData.level;
+                    renderLevels();
                 });
             });
             loadLeaderboard();
         }
 
-        function updateUI(data) {
-            document.getElementById('dispName').innerText = data.name;
-            document.getElementById('dispLvl').innerText = data.level;
-            document.getElementById('cardName').innerText = data.name;
-            document.getElementById('cardId').innerText = "#" + data.uid.substring(0, 10).toUpperCase();
-            
-            const p = Math.round((data.level / 12) * 100);
-            document.getElementById('progBar').style.width = p + "%";
-            document.getElementById('progText').innerText = p;
-            renderLevels();
-        }
-
         function renderLevels() {
-            const grid = document.getElementById('levelGrid');
-            grid.innerHTML = '';
+            const grid = document.getElementById('levelGrid'); grid.innerHTML = '';
             for(let i=1; i<=12; i++) {
                 let lock = i > userData.level;
                 grid.innerHTML += `
-                    <div onclick="openTest(${i}, ${lock})" class="level-card p-10 bg-white border-2 border-slate-50 text-center ${lock ? 'locked' : 'shadow-sm'}">
+                    <div onclick="openTest(${i}, ${lock})" class="level-card p-12 text-center ${lock ? 'locked' : 'shadow-sm animate__animated animate__fadeInUp'}" style="animation-delay: ${i*0.05}s">
                         <div class="text-4xl mb-4">${lock ? '🔒' : '🎖️'}</div>
-                        <p class="text-[10px] font-black uppercase text-slate-400">Module ${i}</p>
+                        <p class="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Module ${i}</p>
                     </div>
                 `;
             }
         }
 
         function openTest(num, lock) {
-            if(lock) return errorSfx.play();
-            if(num !== userData.level) return alert("Pehle पिछला level complete karein!");
-
-            const d = material[num] || { s: "Standard Academy Assessment. Focus and reply.", q: "Type 'ready' to pass.", a: "ready" };
+            if(lock || num !== userData.level) return;
             document.getElementById('quizModal').style.display = 'flex';
-            document.getElementById('mTitle').innerText = "Module " + num;
-            document.getElementById('mStudy').innerText = d.s;
-            document.getElementById('mQuestionArea').innerHTML = `
-                <p class="text-center mb-6 font-bold text-slate-700">${d.q}</p>
-                <input id="ansInp" type="text" placeholder="Your Answer" class="w-full p-5 bg-slate-50 rounded-3xl outline-none border-2 focus:border-blue-600 font-black text-center mb-4">
-                <button onclick="checkAns(${num}, '${d.a}')" class="w-full bg-blue-900 text-white py-5 rounded-3xl font-black shadow-xl hover:bg-blue-800 transition">SUBMIT</button>
-            `;
-            startTimer();
-        }
-
-        function startTimer() {
-            let s = 30; document.getElementById('timeSec').innerText = s;
-            clearInterval(timer);
-            timer = setInterval(() => {
-                s--; document.getElementById('timeSec').innerText = s;
-                if(s <= 0) { clearInterval(timer); alert("TIME OUT!"); closeQuiz(); }
-            }, 1000);
-        }
-
-        function checkAns(num, correct) {
-            const val = document.getElementById('ansInp').value.trim().toLowerCase();
-            if(val === correct.toLowerCase()) {
-                clearInterval(timer); successSfx.play();
-                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-                
-                db.ref('gbts_trusted/' + userData.path).update({ level: userData.level + 1 });
-                db.ref('gbts_ranks/' + auth.currentUser.uid).set({ name: userData.name, level: userData.level + 1 });
-                
-                setTimeout(() => { alert("Passed! Module " + num + " Complete."); closeQuiz(); }, 500);
-            } else { errorSfx.play(); alert("Wrong answer sweetie! Try again."); }
+            document.getElementById('mTitle').innerText = "Level " + num;
+            document.getElementById('mStudy').innerText = "Assalam-o-Alaikum! Is level ko clear karne ke liye niche 'confirm' likhein.";
+            
+            document.getElementById('subBtn').onclick = () => {
+                if(document.getElementById('ansInp').value.trim().toLowerCase() === 'confirm') {
+                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                    document.getElementById('successSfx').play();
+                    db.ref('gbts_final_secure/' + userData.path).update({ level: userData.level + 1 });
+                    db.ref('ranks_final_secure/' + userData.uid).set({ name: userData.name, level: userData.level + 1 });
+                    closeModal();
+                } else { alert("Ghalat! Sahi spelling likhein."); }
+            };
         }
 
         function loadLeaderboard() {
-            db.ref('gbts_ranks').orderByChild('level').limitToLast(10).on('value', snap => {
+            db.ref('ranks_final_secure').orderByChild('level').limitToLast(10).on('value', snap => {
                 const list = document.getElementById('leaderList'); list.innerHTML = '';
-                let ranks = []; snap.forEach(c => ranks.push(c.val()));
-                ranks.reverse().forEach((r, i) => {
-                    list.innerHTML += `<div class="flex justify-between p-5 bg-slate-50 rounded-[30px] border">
-                        <span class="font-black text-sm uppercase italic">#${i+1} ${r.name}</span>
-                        <span class="text-[10px] font-bold bg-blue-900 text-white px-4 py-1 rounded-full">LVL ${r.level}</span>
+                let data = []; snap.forEach(c => data.push(c.val()));
+                data.reverse().forEach((r, i) => {
+                    list.innerHTML += `<div class="flex justify-between items-center p-5 bg-slate-50 rounded-[30px] border border-slate-100 animate__animated animate__fadeInLeft">
+                        <span class="font-black text-xs uppercase italic">#${i+1} ${r.name}</span>
+                        <span class="bg-blue-900 text-white px-4 py-1 rounded-full text-[10px] font-black italic">LVL ${r.level}</span>
                     </div>`;
                 });
             });
         }
 
-        function closeQuiz() { clearInterval(timer); document.getElementById('quizModal').style.display = 'none'; }
-        function showTab(id) { document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab')); document.getElementById(id).classList.add('active-tab'); }
-        function logout() { auth.signOut().then(() => location.reload()); }
+        function closeModal() { 
+            document.getElementById('quizModal').style.display = 'none'; 
+            document.getElementById('ansInp').value = ''; 
+        }
+
+        function showTab(id) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
+            document.getElementById(id).classList.add('active-tab');
+        }
+
+        function logout() {
+            localStorage.clear();
+            auth.signOut().then(() => location.reload());
+        }
     </script>
 </body>
 </html>
